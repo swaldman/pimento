@@ -1,0 +1,31 @@
+package build
+
+import mill._
+import mill.scalalib._
+import mill.scalalib.publish._
+
+object `package` extends RootModule with ScalaModule with PublishModule {
+  override def scalaVersion   = "3.3.6"
+  override def publishVersion = T { "0.0.1-SNAPSHOT" }
+  override def scalacOptions  = T { Seq("-deprecation") }
+  override def artifactName   = T { "pimento" }
+  override def pomSettings    = T { makePomSettings("A tiny password management library") }
+
+  override def ivyDeps = T {
+    Agg(
+      ivy"at.favre.lib:bcrypt:0.10.2"
+    )
+  }
+
+  def makePomSettings( description : String ) =
+    PomSettings(
+      description = description,
+      organization = "com.mchange",
+      url = "https://www.mchange.com/projects/pimento",
+      licenses = Seq(License.`Apache-2.0`),
+      versionControl = VersionControl.github("swaldman", "pimento"),
+      developers = Seq(
+        Developer("swaldman", "Steve Waldman", "https://github.com/swaldman")
+      )
+    )
+  }
