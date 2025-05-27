@@ -1,7 +1,9 @@
 package com.mchange.pimento
 
+import Erasable.{*, given}
+
 object PasswordManager:
-  trait Standard[PW <: Erasable, SC <: Erasable, T] extends PasswordManager[PW, T]:
+  trait Standard[PW : Erasable, SC : Erasable, T] extends PasswordManager[PW, T]:
     def storeFor( username : String, storableCredential : SC, identity : T ) : Unit
     def storedCredentialAndIdentity( username : String ) : Option[( SC, T )]
 
@@ -36,19 +38,19 @@ object PasswordManager:
       trait HashSha512:
         this : PasswordManager.FavreBCrypt[?,?,?] =>
         override def longPasswordStrategy( bv : BCrypt.Version )  : LongPasswordStrategy = LongPasswordStrategies.hashSha512( bv )
-    trait ByteArray[T]( val costFactor : Int ) extends FavreBCrypt[Erasable.ByteArray,Erasable.ByteArray,T]:
-      def createStorableCredential( password : Erasable.ByteArray ) : Erasable.ByteArray =
-        Erasable.ByteArray( hasher.hash( costFactor, password.value ) )
-      def checkAgainstCredential( password : Erasable.ByteArray, storedCredential : Erasable.ByteArray ) : Boolean =
-      verifier.verify( password.value, storedCredential.value ).verified
-    trait CharArray[T]( val costFactor : Int ) extends FavreBCrypt[Erasable.CharArray,Erasable.CharArray,T]:
-      def createStorableCredential( password : Erasable.CharArray ) : Erasable.CharArray =
-        Erasable.CharArray( hasher.hashToChar( costFactor, password.value ) )
-      def checkAgainstCredential( password : Erasable.CharArray, storedCredential : Erasable.CharArray ) : Boolean =
-        verifier.verify( password.value, storedCredential.value ).verified
+    trait ByteArray[T]( val costFactor : Int ) extends FavreBCrypt[Array[Byte],Array[Byte],T]:
+      def createStorableCredential( password : Array[Byte] ) : Array[Byte] =
+        hasher.hash( costFactor, password )
+      def checkAgainstCredential( password : Array[Byte], storedCredential : Array[Byte] ) : Boolean =
+      verifier.verify( password, storedCredential ).verified
+    trait CharArray[T]( val costFactor : Int ) extends FavreBCrypt[Array[Char],Array[Char],T]:
+      def createStorableCredential( password : Array[Char] ) : Array[Char] =
+        hasher.hashToChar( costFactor, password )
+      def checkAgainstCredential( password : Array[Char], storedCredential : Array[Char] ) : Boolean =
+        verifier.verify( password, storedCredential ).verified
 
 
-  trait FavreBCrypt[PW <: Erasable, SC <: Erasable, T] extends Standard[PW,SC,T]:
+  trait FavreBCrypt[PW : Erasable, SC : Erasable, T] extends Standard[PW,SC,T]:
     import at.favre.lib.crypto.bcrypt.{BCrypt, LongPasswordStrategy, LongPasswordStrategies}
     import java.security.SecureRandom
 
@@ -64,7 +66,7 @@ object PasswordManager:
 
 end PasswordManager
 
-trait PasswordManager[PW <: Erasable, T]:
+trait PasswordManager[PW : Erasable, T]:
   def set( username : String, password : PW, identity : T ) : Unit
   def authenticate( username : String, password : PW )      : Option[T]
 end PasswordManager
